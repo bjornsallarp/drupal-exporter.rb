@@ -7,6 +7,8 @@ require_relative 'vocabulary'
 require_relative 'user'
 require_relative 'content_type'
 require_relative 'file_managed'
+require_relative 'url_alias'
+require_relative 'image_metadata'
 
 module Contentful
   module Exporter
@@ -22,10 +24,12 @@ module Contentful
 
         def save_data_as_json
           boolean_columns << YAML.load_file(config.config['drupal_boolean_columns']) if config.config['drupal_boolean_columns']
+          content_types
+          image_metadata
+          urls
           tags
           vocabularies
           users
-          content_types
           files
         end
 
@@ -41,6 +45,10 @@ module Contentful
 
         private
 
+        def urls
+          UrlAlias.new(self, config).save_urls_as_json
+        end
+
         def tags
           Tag.new(self, config).save_tags_as_json
         end
@@ -55,6 +63,10 @@ module Contentful
 
         def files
           FileManaged.new(self, config).save_files_as_json
+        end
+
+        def image_metadata
+          ImageMetadata.new(self, config).save_metadata_as_json
         end
 
         def content_types

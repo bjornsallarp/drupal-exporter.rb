@@ -28,7 +28,7 @@ module Contentful
           result[:id] = id(row[:fid])
           result[:title] = row[:filename]
           result[:description] = row[:description]
-          result[:url] = "#{config.drupal_base_url}/#{row[:uri].gsub(' ', '%20').gsub('public://','sites/default/files/')}"
+          result[:url] = "#{config.drupal_base_url}/#{row[:uri].gsub(' ', '%20').gsub('public://','sites/odla.nu/files/')}"
           result
         end
 

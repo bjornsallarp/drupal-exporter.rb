@@ -83,10 +83,14 @@ module Contentful
         end
 
         def get_file_id(related_row, table_name)
+          # Handle multiple files
           file_key = "#{table_name}_fid".to_sym
-          file_id = related_row.first[file_key]
-          file_asset_id = file_id(file_id)
-          link_asset_to_content_type(file_asset_id)
+
+          related_row.each_with_object([]) do |row, files|  
+            file_id = row[file_key]
+            file_asset_id = file_id(file_id)
+            files << link_asset_to_content_type(file_asset_id)
+          end
         end
 
         def file_id(file_id)
@@ -102,8 +106,34 @@ module Contentful
         end
 
         def related_value(related_rows, table_name)
-          value = related_rows.empty? ? nil : related_rows.first[field_name(table_name)]
-          convert_type_value(value, table_name)
+          if related_rows.empty? 
+            nil
+          elsif related_rows.count === 1
+            related_value_object(related_rows.first, table_name)
+          else
+            related_rows.each_with_object([]) do |row, values|  
+              values << related_value_object(row, table_name)
+            end
+          end
+        end
+
+        def related_value_object(row, table_name, result = {})
+          value = row[field_name(table_name)]
+          fmat = row["#{table_name}_format".to_sym]
+          target_id = row["#{table_name}_target_id".to_sym]
+          tid = row["#{table_name}_tid".to_sym]
+          quick = row["#{table_name}_metatags_quick".to_sym]
+
+          result[:value] = value unless value.nil?
+          result[:format] = fmat unless fmat.nil?
+          result[:target_id] = target_id unless target_id.nil?
+          result[:tid] = tid unless tid.nil?
+          result[:quick] = quick unless quick.nil?
+          result
+        end
+
+        def create_value_object(value, fmat, target_id, tag_id, quick, table_name)
+          {value: convert_type_value(value, table_name), format: fmat}
         end
 
         def fetch_custom_tags(entity_id, table_name)
